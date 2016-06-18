@@ -4,4 +4,5 @@
     <route url="/500" module="Simulateur" action="redirect500" />
 	<route url="/connexion" module="Connexion" action="index" />
 	<route url="/deconnexion" module="Connexion" action="deconnexion" />
+	<route url="/pack" module="Pack" action="index" />
 </routes>

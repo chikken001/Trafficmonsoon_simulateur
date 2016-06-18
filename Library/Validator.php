@@ -103,15 +103,15 @@ class Validator
 	
 	public function is_NumSecu($numero)
 	{
-		$regexp = '/^                                               # début de chaîne
+		$regexp = '/^                                               # début de chaÃ®ne
 		(?<sexe>[1278])                                             # 1 et 7 pour les hommes ou 2 et 8 pour les femmes
 		(?<annee>[0-9]{2})                                          # année de naissance
 		(?<mois>0[1-9]|1[0-2]|20)                                   # mois de naissance (si >= 20, c\'est qu\'on ne connaissait pas le mois de naissance de la personne
-		(?<departement>[02][1-9]|2[AB]|[1345678][0-9]|9[012345789]) # le département : 01 à 19, 2A ou 2B, 21 à 95, 99 (attention, cas particulier hors métro traité hors expreg)
+		(?<departement>[02][1-9]|2[AB]|[1345678][0-9]|9[012345789]) # le département : 01 Ã  19, 2A ou 2B, 21 Ã  95, 99 (attention, cas particulier hors métro traité hors expreg)
 		(?<numcommune>[0-9]{3})                                     # numéro d\'ordre de la commune (attention car particuler pour hors métro  traité hors expression régulière)
 		(?<numacte>00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})               # numéro d\'ordre d\'acte de naissance dans le mois et la commune ou pays
-		(?<clef>0[1-9]|[1-8][1-9]|9[1-7])?                          # numéro de contrôle (facultatif)
-		$                                                           # fin de chaîne
+		(?<clef>0[1-9]|[1-8][1-9]|9[1-7])?                          # numéro de contrÃ´le (facultatif)
+		$                                                           # fin de chaÃ®ne
 		/x';
 		
 		if(!preg_match($regexp, $numero, $match)){
@@ -124,8 +124,8 @@ class Validator
 			'mois' =>$match['mois'],//20 = inconnu
 			'departement' =>$match['departement'],//99 = étranger
 			'numcommune' =>$match['numcommune'],//990 = inconnu
-			'numacte' =>$match['numacte'],//001 à 999
-			'clef' =>isset($match['clef'])?$match['clef']:NULL,//00 à 97
+			'numacte' =>$match['numacte'],//001 Ã  999
+			'clef' =>isset($match['clef'])?$match['clef']:NULL,//00 Ã  97
 			'pays' =>'fra',//par défaut, on change que pour le cas spécifique
 		);
 	 
@@ -179,7 +179,7 @@ class Validator
 	{
 		if(is_int($min) && is_int($max))
 		{
-			if (!is_string($nom) || empty($nom) || !preg_match('/^[a-zA-ZÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñÿŸ]{'.$min.','.$max.'}+$/',$nom))
+			if (!is_string($nom) || empty($nom) || !preg_match('/^[a-zA-ZÃ€Ã�Ã‚ÃƒÃ„Ã…Ã Ã¡Ã¢Ã£Ã¤Ã¥Ã’Ã“Ã”Ã•Ã–Ã˜Ã²Ã³Ã´ÃµÃ¶Ã¸ÃˆÃ‰ÃŠÃ‹èéÃªÃ«Ã‡Ã§ÃŒÃ�ÃŽÃ�Ã¬Ã­Ã®Ã¯Ã™ÃšÃ›ÃœÃ¹ÃºÃ»Ã¼Ã¿Ã‘Ã±Ã¿Å¸]{'.$min.','.$max.'}+$/',$nom))
 			{
 				return FALSE ;	
 			}
@@ -198,7 +198,7 @@ class Validator
 	{
 		if(is_int($min) && is_int($max))
 		{
-			if (!is_string($intitule) || empty($intitule) || !preg_match('/^[\sa-zA-Z0-9ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñÿŸ\/\\-_]{'.$min.','.$max.'}+$/',$intitule))
+			if (!is_string($intitule) || empty($intitule) || !preg_match('/^[\sa-zA-Z0-9Ã€Ã�Ã‚ÃƒÃ„Ã…Ã Ã¡Ã¢Ã£Ã¤Ã¥Ã’Ã“Ã”Ã•Ã–Ã˜Ã²Ã³Ã´ÃµÃ¶Ã¸ÃˆÃ‰ÃŠÃ‹èéÃªÃ«Ã‡Ã§ÃŒÃ�ÃŽÃ�Ã¬Ã­Ã®Ã¯Ã™ÃšÃ›ÃœÃ¹ÃºÃ»Ã¼Ã¿Ã‘Ã±Ã¿Å¸\/\\-_]{'.$min.','.$max.'}+$/',$intitule))
 			{
 				return FALSE ;	
 			}
@@ -217,7 +217,7 @@ class Validator
 	{
 		if(is_int($min) && is_int($max))
 		{
-			if (!is_string($login) || empty($login) || !preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñÿŸ]{'.$min.','.$max.'}+$/',$login))
+			if (!is_string($login) || empty($login) || !preg_match('/^[a-zA-Z0-9Ã€Ã�Ã‚ÃƒÃ„Ã…Ã Ã¡Ã¢Ã£Ã¤Ã¥Ã’Ã“Ã”Ã•Ã–Ã˜Ã²Ã³Ã´ÃµÃ¶Ã¸ÃˆÃ‰ÃŠÃ‹èéÃªÃ«Ã‡Ã§ÃŒÃ�ÃŽÃ�Ã¬Ã­Ã®Ã¯Ã™ÃšÃ›ÃœÃ¹ÃºÃ»Ã¼Ã¿Ã‘Ã±Ã¿Å¸]{'.$min.','.$max.'}+$/',$login))
 			{
 				return FALSE ;	
 			}
@@ -335,7 +335,7 @@ class Validator
 		{
 			if(is_string($date) && !empty($date))
 			{
-				if(preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4} [0-9]{1,2}:[0-5]{1}[0-9]{1}$)/',$date) && $type === 'datetime')
+				if(preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$)/',$date) && $type === 'datetime')
 				{
 					$Date = $this->datetime_format($date) ;
 					$format = "Y-m-d H:i:s" ;

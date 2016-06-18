@@ -28,7 +28,6 @@ class ConnexionController extends \Library\BackController
 			if ($request->postExists('Connexion'))
 			{
 				$this->processConnexion($request, $form_connexion) ;
-				
 			}
 			else
 			{
@@ -61,18 +60,19 @@ class ConnexionController extends \Library\BackController
 			
 			$erreur = $Form_connexion->bol() ;
 			
-			if($erreur === false)
+			if($erreur == false)
 			{
-				if($erreur == false)
+				$crypt = new Crypt ;
+				$user = $this->em('User')->DEF->getUnique(array('login' => $login));
+				
+				if($user)
 				{
-					$crypt = new Crypt ;
-					$user = $this->em('User')->DEF->getUnique(array('login' => $login));
 					$salt = $user->salt();
 					$pass = $crypt->pass($password, $salt, $this->encrypt_key) ;
 					
-					if($pass == $user->password())
+					if($pass == $user->mdp())
 					{
-						$this->app->user()->setAuthenticated(true,$statut);
+						$this->app->user()->setAuthenticated(true);
 						$this->user->setAttribute('id', $user->id());
 						
 						$this->app->user()->setAttribute('pseudo', $login) ;
@@ -87,6 +87,10 @@ class ConnexionController extends \Library\BackController
 				{
 					$this->app->user()->setFlash('Identifiants inccorects');
 				}
+			}
+			else
+			{
+				$this->app->user()->setFlash('Identifiants inccorects');
 			}
 			
 			$this->page->addVar('Connexion_form', $Form_connexion->form());

@@ -61,26 +61,11 @@ class User extends ApplicationComponent
 		return isset($_SESSION['auth']) && $_SESSION['auth'] === true;
 	}
 	
-	public function isPrestataire()
+	public function setAuthenticated($authenticated = true)
 	{
-		return isset($_SESSION['auth']) && $_SESSION['auth'] === true && isset($_SESSION['statut']) && $_SESSION['statut'] === 'Prestataire';
-	}
-	
-	public function isIntermittent()
-	{
-		return isset($_SESSION['auth']) && $_SESSION['auth'] === true && isset($_SESSION['statut']) && $_SESSION['statut'] === 'Intermittent';
-	}
-	
-	public function setAuthenticated($authenticated = true, $statut = false)
-	{
-		if (!is_bool($authenticated) || (!is_bool($statut) && !is_string($statut)))
+		if (!is_bool($authenticated))
 		{
 			throw new \InvalidArgumentException('Les valeurs specifiees a la methode User::setAuthenticated() doivent etre valide');
-		}
-		
-		if($statut === 'Prestataire' || $statut === 'Intermittent')
-		{
-			$_SESSION['statut'] = $statut;
 		}
 		
 		$_SESSION['auth'] = $authenticated;

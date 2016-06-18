@@ -15,6 +15,11 @@
 	</head>
  
 	<body>
+		<?php
+			if ($user->isAuthenticated()){
+				echo'<a href="deconnexion">Déconnexion</a>';
+			}
+		?>
         
         <?php echo $content; ?>
 		
