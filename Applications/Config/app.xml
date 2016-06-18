@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions>
+	<define var="encrypt_key" value="A6@fmPé#8=" /> <!-- Ne pas modifier manuellement -->
+	<define var="mode" value="development" /> <!-- development / production -->
+	<define var="API" value="PDO" /> <!-- PDO / MySQLi -->
+	<define var="site" value="http://tmsimulateur" />
+	<define var="prefix_table" value="" />
+	<define var="dbname" value="TM_simulateur" />
+	<define var="dblogin" value="root" />
+	<define var="dbpassword" value="root" />
+	<define var="host" value="localhost" />
+	<define var="timezone" value="Europe/Paris" />
+</definitions>

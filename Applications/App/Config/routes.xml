@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <route url="/" module="Simulateur" action="index" />
+    <route url="/500" module="Simulateur" action="redirect500" />
+	<route url="/connexion" module="Connexion" action="index" />
+	<route url="/deconnexion" module="Connexion" action="deconnexion" />
+</routes>
