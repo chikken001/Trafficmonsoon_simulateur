@@ -28,6 +28,7 @@ class ConnexionController extends \Library\BackController
 			if ($request->postExists('Connexion'))
 			{
 				$this->processConnexion($request, $form_connexion) ;
+				
 			}
 			else
 			{
