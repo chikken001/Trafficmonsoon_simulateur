@@ -45,7 +45,6 @@ class Pack extends \Library\Entity
 	
 	public function date_achat()
 	{
-		$date = new \DateTime($this->date_achat) ;
-		return $date->format('d/m/Y H:i:s');
+		return $this->date_achat ;
 	}
 }

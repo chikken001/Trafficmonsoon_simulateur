@@ -5,4 +5,5 @@
 	<route url="/connexion" module="Connexion" action="index" />
 	<route url="/deconnexion" module="Connexion" action="deconnexion" />
 	<route url="/pack" module="Pack" action="index" />
+	<route url="/pack/supprimer" module="Pack" action="delete" />
 </routes>

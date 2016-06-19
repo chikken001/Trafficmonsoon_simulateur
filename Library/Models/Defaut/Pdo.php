@@ -432,15 +432,15 @@ class Pdo
 			{
 				foreach ($this->types as $argument => $type)
 				{
-					if($type == 'date' && $entity[$argument] != '0000-00-00')
+					if($type == 'date' && $entity[$argument] != '0000-00-00' && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4}$)/',$entity[$argument]))
 					{
 						$method = 'set'.ucfirst($argument) ;
 						$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y')) ;
 					}
-					elseif($type == 'datetime' && $entity[$argument] != '0000-00-00')
+					elseif($type == 'datetime' && $entity[$argument] != '0000-00-00' && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$)/',$entity[$argument]))
 					{
 						$method = 'set'.ucfirst($argument) ;
-						$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i')) ;
+						$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i:s')) ;
 					}
 				}
 			}
@@ -511,15 +511,26 @@ class Pdo
 			{
 				$valeur = $entity->$argument() ;
 				
-				if($this->types[$argument] == 'date')
+				if($this->types[$argument] == 'date' || $this->types[$argument] == 'datetime')
 				{
-					date_parse_from_format("Y-m-d", $valeur)['error_count'] != 0 ? $valeur = $this->manager->date_format($valeur) : $valeur = $valeur ;
+					if(!$valeur instanceof \DateTime)
+					{
+						if($this->types[$argument] == 'date')
+						{
+							date_parse_from_format("Y-m-d", $valeur)['error_count'] != 0 ? $valeur = $this->manager->date_format($valeur) : $valeur = $valeur ;
+						}
+						elseif($this->types[$argument] == 'datetime')
+						{
+							date_parse_from_format("Y-m-d H:i:s", $valeur)['error_count'] != 0 ? $valeur = $this->manager->datetime_format($valeur) : $valeur = $valeur ;
+						}
+					}
+					else 
+					{
+						$this->types[$argument] == 'date' ? $format = "Y-m-d" : $format = "Y-m-d H:i:s" ; 
+						$valeur = $valeur->format($format) ;
+					}
 				}
-				elseif($this->types[$argument] == 'datetime')
-				{
-					date_parse_from_format("Y-m-d H:i:s", $valeur)['error_count'] != 0 ? $valeur = $this->manager->datetime_format($valeur) : $valeur = $valeur ;
-				}
-						
+				
 				$valeur === false ? $requete->bindValue(":$argument", null, \PDO::PARAM_INT) : $requete->bindValue(":$argument", $valeur) ;
 			}
 			
