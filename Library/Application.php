@@ -42,7 +42,7 @@ abstract class Application
         {
             date_default_timezone_set('Europe/Paris') ;
         }
-		
+		 
 		$this->name = '';
 	}
 	
