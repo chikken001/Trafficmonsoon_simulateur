@@ -412,7 +412,7 @@ class MultiForm
 				}
 				elseif($conf[0] == 'p')
 				{
-					if(!isset($conf[1]) || !is_string($conf[1]) || empty($conf[1]))
+					if(!isset($conf[1]) || !is_string($conf[1]))
 					{
 						throw new \InvalidArgumentException('le contenu de la balise p est invalide');
 					}

@@ -222,7 +222,7 @@ class Pdo
 				elseif($type == 'datetime' && $entity[$argument] != '0000-00-00')
 				{
 					$method = 'set'.ucfirst($argument) ;
-					$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i')) ;
+					$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i:s')) ;
 				}
 			}
 		}
@@ -467,11 +467,25 @@ class Pdo
 					{
 						if($this->types[$nom] == 'date')
 						{
-							date_parse_from_format("Y-m-d", $valeur)['error_count'] != 0 ? $valeur = $this->manager->date_format($valeur) : $valeur = $valeur ;
+							if(!$valeur instanceof \DateTime)
+							{
+								date_parse_from_format("Y-m-d", $valeur)['error_count'] != 0 ? $valeur = $this->manager->date_format($valeur) : $valeur = $valeur ;
+							}
+							else
+							{
+								$valeur = $valeur->format('Y-m-d');
+							}
 						}
 						elseif($this->types[$nom] == 'datetime')
-						{
-							date_parse_from_format("Y-m-d H:i:s", $valeur)['error_count'] != 0 ? $valeur = $this->manager->datetime_format($valeur) : $valeur = $valeur ;
+						{							
+							if(!$valeur instanceof \DateTime)
+							{
+								date_parse_from_format("Y-m-d H:i:s", $valeur)['error_count'] != 0 ? $valeur = $this->manager->datetime_format($valeur) : $valeur = $valeur ;
+							}
+							else
+							{
+								$valeur = $valeur->format('Y-m-d H:i:s');
+							}
 						}
 						
 						$first == false ? $sql .= ', ' : $first = false ;
