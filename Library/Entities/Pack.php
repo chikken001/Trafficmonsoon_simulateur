@@ -29,35 +29,36 @@ class Pack extends \Library\Entity
 	
 	public function setDate_achat($date_achat)
 	{
-		if (!$this->validator->is_Date($date_achat, 'datetime'))
+		if (!empty($date_achat) && !$this->validator->is_Date($date_achat, 'datetime'))
 		{
 			$this->erreurs[] = self::DATE_ACHAT_INVALIDE;
 		}
-		else
-		{
-			$this->date_achat = $date_achat;
-		}
+
+		$this->date_achat = $date_achat;
+		
 	}
 	
 	public function setDate($date)
 	{
-		if (!empty($date) && !$this->validator->is_Date($date, 'datetime'))
+		if(!empty($date) && !$this->validator->is_Date($date, 'datetime'))
 		{
 			$this->erreurs[] = self::DATE_INVALIDE;
 		}
 		else
 		{
+			if(empty($date)) $date = date('d/m/Y H:i:s');
 			$this->date = $date;
 		}
 	}
 	
 	public function setMontant($montant)
 	{
-		if(!is_numeric($montant))
+		if(!empty($montant) && !is_numeric($montant))
 		{
 			$this->erreurs[] = self::MONTANT_INVALIDE;
 		}
-	
+		
+		if(empty($montant)) $montant = 0 ;
 		$this->montant = $montant;
 	}
   

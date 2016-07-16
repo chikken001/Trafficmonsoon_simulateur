@@ -17,13 +17,19 @@ function initialiser()
 
 function dateFRtoEN(date)
 {
-	var date_split = date.split("/"),
-        time_split = date_split[2],
-		year_split = time_split.split(" "),
-		year = year_split[0],
-		time = year_split[1],
-		day = date_split[0],
-		month = date_split[1];
+	var date_split = date.split("/");
+	var time_split = date_split[2];
 	
-	return year+'-'+month+'-'+day+' '+time ;
+	if(time_split !== undefined)
+	{
+		var	year_split = time_split.split(" ");
+		var	year = year_split[0];
+		var	time = year_split[1];
+		var	day = date_split[0];
+		var	month = date_split[1];
+	
+		return year+'-'+month+'-'+day+' '+time ;
+	}
+	
+	return date ;
 }
