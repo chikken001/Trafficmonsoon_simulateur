@@ -1012,15 +1012,9 @@ class Form
 				}
 				elseif($conf[0] == 'hidden' && $conf[1] === true)
 				{
-					if(isset($entity[$field]))
-					{
-						$hidden = '<input type="hidden" name="'.$prefix_field.$field.'" value="'.$entity[$field].'"/>' ;	
-						$formulaire .= $hidden ;
-					}
-					else
-					{
-						throw new \InvalidArgumentException('Le champ hidden '.$field.' n\'est pas un attribut ou n\'est pas attribue a l\'objet : '.$this->entity);
-					}
+					$value = $this->objet[$field] ;
+					$hidden = '<input type="hidden" name="'.$prefix_field.$field.'" value="'.$value.'"/>' ;	
+					$formulaire .= $hidden ;
 				}
                 elseif($conf[0] == 'submit')
 				{

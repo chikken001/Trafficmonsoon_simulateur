@@ -64,7 +64,7 @@ class PackController extends \Library\BackController
 		}
 		
 		$packs = $this->em('Pack')->DEF->getList(array('id_user' => $id_user), 'montant', '-1', '-1', 'DESC'); 
-		//var_dump($packs);
+
 		$form_pack = array(
 			'date_achat' => array('date',"Date d'achat",array('invalide' => "La date d'achat est invalide")),
 			'date' => array('date',"Date *",array('invalide' => 'La date est invalide'), '', array('placeholder' => date('d/m/Y H:i:s'))),
@@ -82,6 +82,7 @@ class PackController extends \Library\BackController
 		
 		$form_solde = array(
 				'solde' => array('text',"",array('invalide' => "Le solde est invalide")),
+				'updated_at' => array('hidden', true),
 				'valide_form' => 'Solde mis à jour',
 				'save_solde' => array('submit','Enregistrer')
 		);
