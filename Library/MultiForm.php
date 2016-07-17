@@ -902,7 +902,7 @@ class MultiForm
 								}
 								
 								if($conf[0] != 'textarea') 
-								{
+								{  
 									$field_champ = '<input type="'.$conf[0].'" name="'.$name_field.$field.'_'.$encrypt_id.'" value="'.$value.'"' ;
 									
 									if(isset($conf[4]))

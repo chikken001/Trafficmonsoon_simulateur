@@ -64,9 +64,9 @@ class PackController extends \Library\BackController
 		}
 		
 		$packs = $this->em('Pack')->DEF->getList(array('id_user' => $id_user), 'montant', '-1', '-1', 'DESC'); 
-		
+		//var_dump($packs);
 		$form_pack = array(
-			'date_achat' => array('date',"Date d'achat *",array('invalide' => "La date d'achat est invalide")),
+			'date_achat' => array('date',"Date d'achat",array('invalide' => "La date d'achat est invalide")),
 			'date' => array('date',"Date *",array('invalide' => 'La date est invalide'), '', array('placeholder' => date('d/m/Y H:i:s'))),
 			'montant' => array('text',"Montant à l'enregistrement *",array('invalide' => 'Le montant est invalide'), '', array('placeholder' => 0)),
 			'enregistrer' => array('submit','Enregistrer')
@@ -87,7 +87,6 @@ class PackController extends \Library\BackController
 		);
 		
 		$user = $this->em('User')->DEF->getUnique($id_user);
-		$date_solde = $user->updated_at() ;
 		
 		$Form_solde = new Form($user, $form_solde, $this->app, $this->managers) ;
 		
@@ -95,7 +94,10 @@ class PackController extends \Library\BackController
 		{
 			$values = array('updated_at' => new \DateTime()) ;
 			$Form_solde->processForm($request, false, $values) ;
+			$user->setUpdated_at(date('d/m/Y H:i:s'));
 		}
+		
+		$date_solde = $user->updated_at() ;
 		
 		$this->page->addVar('pack_form', $Form_pack->form());
 		$this->page->addVar('solde_form', $Form_solde->form());

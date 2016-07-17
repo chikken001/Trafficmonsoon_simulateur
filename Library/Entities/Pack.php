@@ -33,7 +33,8 @@ class Pack extends \Library\Entity
 		{
 			$this->erreurs[] = self::DATE_ACHAT_INVALIDE;
 		}
-
+		
+		if(empty($date_achat)) $date_achat = null;
 		$this->date_achat = $date_achat;
 		
 	}
