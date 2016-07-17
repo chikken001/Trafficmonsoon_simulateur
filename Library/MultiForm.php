@@ -66,6 +66,8 @@ class MultiForm
 		
 		if(is_array($entities))
 		{
+			$tab_entities = array() ;
+			
 			if(count($entities) > 0)
 			{
 				foreach($entities as $entity)
@@ -74,10 +76,14 @@ class MultiForm
 					{
 						throw new \InvalidArgumentException('Le tableau d\'entite contient une instance invalide ou différente de : '.$this->entity);
 					}
+					else 
+					{
+						$tab_entities[$entity->id()] = $entity ;
+					}
 				}
 			}
 			
-			$this->entities = $entities ;
+			$this->entities = $tab_entities ;
 		}
 		elseif(!empty($entities))
 		{
@@ -1749,9 +1755,13 @@ class MultiForm
 						}
 					}
 					
-					$array_entity_multiform['id'] = $entity_id_multiform ;
+					$entity_multiform = $this->entities[$entity_id_multiform] ;
 					
-					$entity_multiform = new $class_multiform($array_entity_multiform) ;
+					foreach($array_entity_multiform as $champ => $value)
+					{
+						$method = 'set'.ucfirst($champ);
+						$entity_multiform->$method($value) ;
+					}
 						
 					if ($entity_multiform->isValid() && !isset($adds_erreur_multiform[$entity_id_multiform]))
 					{
