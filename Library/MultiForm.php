@@ -16,6 +16,7 @@ class MultiForm
 	protected $fields ;
 	protected $entities = array() ;
 	protected $class_form ;
+	protected $id_form ;
 	protected $class_bouton ;
 	protected $entity ;
 	protected $new_erreurs = array() ;
@@ -25,15 +26,20 @@ class MultiForm
 	protected $count = 1 ;
 	protected $multi = array() ;
 	protected $listes_multiform = array();
+	protected $files_multiform = array();
 	protected $adds_fields = array() ;
 	protected $adds = array() ;
+	protected $form_file = '' ;
+	protected $id = '' ;
 	
 	public function __construct($entity, $entities, array $fields, \Library\Application $app, \Library\Managers $managers, $name = '', $class = '', $class_form = '', $class_bouton ='')
 	{
 		$this->crypt = new Crypt ;
+		$this->id = uniqid() ;
 		$listes_multiform = array() ;
+		$files_multiform = array() ;
 		$this->managers = $managers ;
-		$types = array('form','text','textarea','submit','button','hidden','tel','email','password','date','color','datetime','datetime-local','month','number','range','search','time','url','week','multiple','liste','radio') ;
+		$types = array('form','text','textarea','submit','button','hidden','tel','email','password','date','color','datetime','datetime-local','month','number','range','search','time','url','week','multiple','liste','radio','file') ;
 		$attributes = array('accesskey','class','contenteditable','contextmenu','dir','draggable','dropzone','hidden','id','lang','spellcheck','style','tabindex','title','translate','placeholder') ;
 		
 		if(is_object($entity))
@@ -157,6 +163,47 @@ class MultiForm
 								}
 							}
 							
+							if($conf[0] == 'file')
+							{
+								if(!is_string($conf[3]))
+								{
+									throw new \InvalidArgumentException('Le nom spécifié pour le fichier "'.$field.'" est invalide');
+								}
+									
+								if(!is_string($conf[4]))
+								{
+									throw new \InvalidArgumentException('Le chemin spécifié pour le fichier "'.$field.'" est invalide');
+								}
+									
+								if(!is_dir($_SERVER["DOCUMENT_ROOT"].$conf[4]))
+								{
+									throw new \InvalidArgumentException('Le chemin "'.$conf[4].'" pour le fichier "'.$field.'" n\'existe pas sur le serveur');
+								}
+									
+								if(!ctype_digit($conf[5]) && !is_int($conf[5]))
+								{
+									throw new \InvalidArgumentException('La taille maximum spécifié pour le fichier "'.$field.'" est invalide');
+								}
+									
+								if(!is_array($conf[6]))
+								{
+									throw new \InvalidArgumentException('les extensions valides pour le fichier "'.$field.'" doit être sous forme de tableau');
+								}
+								else
+								{
+									foreach($conf[6] as $extension)
+									{
+										if(!is_string($extension))
+										{
+											throw new \InvalidArgumentException('le tableau d\'extensions pour le fichier "'.$field.'" contient une ou plusieurs données invalides');
+										}
+									}
+								}
+									
+								$this->form_file = 'enctype="multipart/form-data"' ;
+								$files_multiform[$field] = $conf[0] ;
+							}
+							
 							if($conf[0] == 'textarea')
 							{
 								if(isset($conf[3]) && !is_numeric($conf[3]) && !empty($conf[3]))
@@ -187,7 +234,7 @@ class MultiForm
 								$arguments = $conf[4] ;
 							}
 							
-							if(isset($arguments) && !empty($arguments) && !is_array($arguments))
+							/*if(isset($arguments) && !empty($arguments) && !is_array($arguments))
 							{
 								throw new \InvalidArgumentException('Le tableau d\'arguments specifie a '.$field.' est invalide');
 							}
@@ -200,7 +247,7 @@ class MultiForm
 										throw new \InvalidArgumentException('Le tableau d\'arguments specifie a '.$field.' contient un ou plusieurs elements invalides');
 									}
 								}
-							}
+							}*/
 						}
 						elseif($conf[0] == 'liste' || $conf[0] == 'multiple' || $conf[0] == 'radio')
 						{
@@ -436,6 +483,7 @@ class MultiForm
 		
 		$this->fields = $fields ;
 		$this->listes_multiform = $listes_multiform ;
+		$this->files_multiform = $files_multiform ;
 		
 		$this->app = $app ;
 		
@@ -489,6 +537,8 @@ class MultiForm
 		{
 			$this->class_form = 'formulaire_'.$this->entity ;
 		}
+		
+		$this->id_form = 'formulaire_'.$this->entity.'_'.$this->id ;
 	}
 	
 	public function form ($active = true)
@@ -498,7 +548,7 @@ class MultiForm
 		$display_error = '' ;
 		$nb_erreur = 10000 ;
 		$msg = '' ;
-		$add = '<input type="button" value="Ajouter '.$this->nom.'" name="New_'.$this->entity.'" />';
+		$add = '<input type="button" id="new_multiform_element" value="Ajouter '.$this->nom.'" name="New_'.$this->entity.'_'.$this->id.'" />';
 		$token = '<input type="hidden" name="token" value="'.$this->token.'"/>' ;
 		
 		foreach($this->fields as $field => $conf)
@@ -515,7 +565,7 @@ class MultiForm
 				}
 				elseif($conf[0] == 'form')
 				{
-					$form= '<form action="" method="post" name="'.$field.'">' ;	
+					$form= '<form action="" method="post" name="'.$field.'" '.$this->form_file.'>' ;	
 				}
 				elseif($conf[0] == 'submit')
 				{
@@ -596,32 +646,47 @@ class MultiForm
 					
 					if($conf[0] != 'submit' && $conf[0] != 'button' && $conf[0] != 'form' && $conf[0] != 'multiple' && $conf[0] != 'liste' && $conf[0] != 'radio')
 					{
-						$script .= 'var '.$field.'= \'<input type="'.$conf[0].'" name="new_'.$field.'_\'+count_form+\'" value=""' ;
-						
 						if($conf[0] == 'textarea' && isset($conf[6]))
 						{
+							$script .= 'var '.$field.'= \'<textarea name="new_'.$field.'_\'+count_form_'.$this->id.'+\'"' ;
 							$arguments = $conf[6] ;
+							$end = '</textarea>\' ;' ;
+							
+							if(isset($arguments) && is_array($arguments))
+							{
+								//die(var_dump($arguments));
+								foreach($arguments as $index => $value)
+								{
+									$value = str_replace("'", "\'", $value) ;
+									$script .= ' '.$index.' ="'.$value.'"';
+								}
+							}
+							
+							$script .= '>' ;
+							
 						}
 						elseif($conf[0] != 'textarea' && isset($conf[4]))
 						{
+							$script .= 'var '.$field.'= \'<input type="'.$conf[0].'" name="new_'.$field.'_\'+count_form_'.$this->id.'+\'" value=""' ;
 							$arguments = $conf[4] ;
-						}
-						
-						if(isset($arguments))
-						{
-							foreach($arguments as $index => $value)
+							$end = '/>\' ;' ;
+							
+							if(isset($arguments) && is_array($arguments))
 							{
-								$script .= ' '.$index.' ="'.$value.'"' ;
+								foreach($arguments as $index => $value)
+								{
+									$script .= ' '.$index.' ="'.$value.'"' ;
+								}
 							}
 						}
 						
-						$script .= '/>\' ;' ;
+						$script .= $end ;
 					}
 					elseif($conf[0] == 'liste' || $conf[0] == 'multiple')
 					{
 						$conf[0] == 'multiple' ? $multiple = 'multiple="multiple"' : $multiple = '' ;
 						
-						$field_champ = '<select name="new_'.$field.'_\'+count_form+\'[]" '.$multiple ;
+						$field_champ = '<select name="new_'.$field.'_\'+count_form_'.$this->id.'+\'[]" '.$multiple ;
 						
 						if(isset($conf[7]))
 						{
@@ -662,7 +727,7 @@ class MultiForm
 						{
 							$checked === false ? $checked = 'checked' : $checked = '' ;
 							
-							is_object($entity) ? $champ = '<input type="radio" name="new_'.$field.'_\'+count_form+\'" value="'.$this->crypt->encrypt($entity->id()).'" '.$checked.'>'.$entity->$conf[5]() : $champ = '<input type="radio" name="new_'.$field.'_\'+count_form+\'" value="'.$index.'" '.$checked.'>'.$entity ;
+							is_object($entity) ? $champ = '<input type="radio" name="new_'.$field.'_\'+count_form_'.$this->id.'+\'" value="'.$this->crypt->encrypt($entity->id()).'" '.$checked.'>'.$entity->$conf[5]() : $champ = '<input type="radio" name="new_'.$field.'_\'+count_form_'.$this->id.'+\'" value="'.$index.'" '.$checked.'>'.$entity ;
 							
 							$field_champ .= $champ ;
 						}
@@ -673,29 +738,44 @@ class MultiForm
 				else
 				{
 					$append .= '+'.$field ;
-					$script .= 'var '.$field.'= \'<input type="hidden" name="new_'.$field.'_\'+count_form+\'" value="'.$conf[1].'" />\' ;' ;
+					$script .= 'var '.$field.'= \'<input type="hidden" name="new_'.$field.'_\'+count_form_'.$this->id.'+\'" value="'.$conf[1].'" />\' ;' ;
 				}
 				
 			}
 		}
 		
-		$js = '$(document).ready(Ajouter_'.$this->entity.');
-				function Ajouter_'.$this->entity.' ()
-				{
-					$("input[name=\'New_'.$this->entity.'\']").click(function()
+		$js = ' if (typeof remove_item != "function") 
+				{  
+					function remove_item ($item)
 					{
-						$(\'.'.$this->class_form.'\').append(\'<div class="'.$this->class.' new_item_form" id="'.$this->entity.'_\'+count_form+\'"></div>\');
+						$($item).remove(); 
+					}
+				}
+									
+				if (typeof init_item != "function") 
+				{  
+					function init_item (){}
+				}
+				
+				$(document).ready(Ajouter_'.$this->entity.'_'.$this->id.');
+				function Ajouter_'.$this->entity.'_'.$this->id.'()
+				{
+					$("input[name=\'New_'.$this->entity.'_'.$this->id.'\']").click(function()
+					{
+						$(\'#'.$this->id_form.'\').append(\'<div class="'.$this->class.' new_item_form" id="'.$this->entity.'_'.$this->id.'_\'+count_form_'.$this->id.'+\'"></div>\');
 						
-						var nom_form = \'<p class="name_'.$this->entity.'">'.$this->nom.' \'+count_form+\'</p>\' ;
+						var nom_form = \'<p class="name_'.$this->entity.'">'.$this->nom.' \'+count_form_'.$this->id.'+\'</p>\' ;
 						
 						'.$script.'
 						
-						var supprimer_form = \'<input type="button" value="Supprimer" name="Supr_entity" id="\'+count_form+\'" onclick="remove_item(\\\'#'.$this->entity.'_\\\'+this.id);" />\' ;
-						var id_form = \'<input type="hidden" name="new_idform_\'+count_form+\'" value="\'+count_form+\'"/>\' ;
+						var supprimer_form = \'<input type="button" value="Supprimer" name="Supr_entity" id="\'+count_form_'.$this->id.'+\'" onclick="remove_item(\\\'#'.$this->entity.'_'.$this->id.'_\\\'+this.id);" />\' ;
+						var id_form = \'<input type="hidden" name="new_idform_\'+count_form_'.$this->id.'+\'" value="\'+count_form_'.$this->id.'+\'"/>\' ;
 						
-						$(\'#'.$this->entity.'_\'+count_form ).append('.$append.'+id_form+supprimer_form);
+						$(\'#'.$this->entity.'_'.$this->id.'_\'+count_form_'.$this->id.' ).append('.$append.'+id_form+supprimer_form);
 						
-						count_form ++ ;
+						count_form_'.$this->id.' ++ ;
+								
+						init_item() ;
 					});
 					
 					if(typeof new_erreurs_'.$this->entity.' != "undefined")
@@ -706,28 +786,19 @@ class MultiForm
 						}
 					}
 				}
-				
-				if (typeof remove_item != "function") 
-				{  
-					function remove_item ($item)
-					{
-						$($item).remove(); 
-					}
-				}
-				
 		';
 			
 		$search = array("\t", "\n", "\r");
  	 	$js = str_replace($search,'',$js);
 		
-		if(!isset($form)) $form = '<form action="" method="post" name="'.$this->entity.'">' ;
+		if(!isset($form)) $form = '<form action="" method="post" name="'.$this->entity.'" '.$this->form_file.'>' ;
 		if(!isset($submit)) $submit = '<input type="submit" value="Enregistrer" name="Enregistrer_'.$this->entity.'" />' ;
 		
 		if(count($this->entities) == 0)
 		{
-			$div = '<div class="'.$this->class_form.'"></div>' ;
+			$div = '<div class="'.$this->class_form.'" id="'.$this->id_form.'"></div>' ;
 			
-			$script = '<script>var count_form = '.$this->count.'; '.$js.'</script>' ;
+			$script = '<script>var count_form_'.$this->id.' = '.$this->count.'; '.$js.'</script>' ;
 			
 			if($active === true) 
 			{
@@ -740,7 +811,7 @@ class MultiForm
 		}
 		else
 		{
-			$div = '<div class="'.$this->class_form.'">' ;
+			$div = '<div class="'.$this->class_form.'" id="'.$this->id_form.'">' ;
 			$new_erreurs = 'new_erreurs_'.$this->entity;
 			
 			if($active === true) 
@@ -755,7 +826,7 @@ class MultiForm
 			foreach($this->entities as $entity)
             {
 				$erreur = 'erreur_'.$entity['id'] ;
-				$block_entity = '<div class="'.$this->class.'" id="'.$this->entity.'_'.$this->count.'">' ;
+				$block_entity = '<div class="'.$this->class.'" id="'.$this->entity.'_'.$this->id.'_'.$this->count.'">' ;
 				$titre = '<p class="name_'.$this->entity.'">'.$this->nom.' '.$this->count.'</p>' ;
 				$field_erreur = '' ;
 				$encrypt_id = $this->crypt->encrypt($entity['id']) ;
@@ -852,7 +923,7 @@ class MultiForm
 							}
 							else
 							{
-								if(($conf[0] != 'textarea' && isset($conf[3]) && !empty($conf[3])) || ($conf[0] == 'textarea' && isset($conf[5]) && !empty($conf[5])))
+								if(($conf[0] != 'textarea' && $conf[0] != 'file' && isset($conf[3]) && !empty($conf[3])) || ($conf[0] == 'textarea' && isset($conf[5]) && !empty($conf[5])))
 								{
 									$conf[0] != 'textarea' ? $confnum = 3 : $confnum = 5;
 									
@@ -894,7 +965,7 @@ class MultiForm
 									$value = $entity[$field] ;
 								}
 								
-								if($conf[0] != 'textarea') 
+								if($conf[0] != 'textarea' && $conf[0] != 'file') 
 								{
 									$field_champ = '<input type="'.$conf[0].'" name="'.$name_field.$field.'_'.$encrypt_id.'" value="'.$value.'"' ;
 									
@@ -908,15 +979,60 @@ class MultiForm
 									
 									$field_champ .= '/>' ;
 								}
+								elseif($conf[0] == 'file')
+								{
+									if(!is_string($value)) $value = '' ;
+									
+									for($a = 1 ; $a < 4 ; $a++)
+									{
+										$nb_erreur ++ ;
+									
+										if($a == 1)
+										{
+											$field_erreur = '<p class="msg_erreur">Le fichier est trop volumineux</p>' ;
+										}
+										elseif($a == 2)
+										{
+											$field_erreur = '<p class="msg_erreur">Le fichier n\'est pas valide</p>' ;
+										}
+										elseif($a == 3)
+										{
+											$field_erreur = '<p class="msg_erreur">Erreur lors de l\'upload du fichier</p>' ;
+										}
+
+										if(isset($entity['id']) && isset($tab_erreur[$entity['id']]) && count($tab_erreur[$entity['id']]) > 0 && in_array($nb_erreur, $tab_erreur[$entity['id']]))
+										{
+											$formulaire .= $field_erreur ;
+										}
+									}
+									
+									$field_champ = '<input type="file" name="'.$name_field.$field.'_'.$encrypt_id.'">' ;
+									
+									$path = $conf[4].$value;
+										
+									if(!empty($value) && file_exists ($_SERVER["DOCUMENT_ROOT"].$path))
+									{
+										$field_champ .= '<p>fichier actuel :<p>' ;
+											
+										if(exif_imagetype($_SERVER["DOCUMENT_ROOT"].$path) && isset($conf[7]) && $conf[7] == 1)
+										{
+											$field_champ .= '<img src="'.$path.'" alt="'.$value.'">' ;
+										}
+										else
+										{
+											$field_champ .= '<p>'.$value.'</p>' ;
+										}
+									}
+								}
 								else
 								{
 									$field_champ = '<textarea name="'.$name_field.$field.'_'.$encrypt_id.'" rows ="'.$conf[3].'" cols ="'.$conf[4].'"' ; 
 									
-									if(isset($conf[4]))
+									if(isset($conf[6]))
 									{
-										foreach($conf[4] as $index => $value)
+										foreach($conf[6] as $index => $valeur)
 										{
-											$field_champ .= ' '.$index.' ="'.$value.'"' ;
+											$field_champ .= ' '.$index.' ="'.$valeur.'"' ;
 										}
 									}
 									
@@ -1217,12 +1333,12 @@ class MultiForm
 					}
 				}
 				
-				$supr = '<input type="button" value="Supprimer" name="Supr_entity" id="'.$this->count.'" onclick="$(\'#'.$this->entity.'_\'+this.id).remove();"/>' ;
+				$supr = '<input type="button" value="Supprimer" name="Supr_entity" id="'.$this->count.'" onclick="$(\'#'.$this->entity.'_'.$this->id.'_\'+this.id).remove();"/>' ;
 				$formulaire .= '<input type="hidden" name="'.$name_field.'idform_'.$encrypt_id.'" value="'.$encrypt_id.'"/>'.$supr.'</div>' ;
 				$this->count ++ ;
 			}
 			
-			$script = "<script>var count_form = ".$this->count." ;";
+			$script = "<script>var count_form_".$this->id." = ".$this->count." ;";
 			if(isset($$new_erreurs)){ $$new_erreurs = json_encode($$new_erreurs) ; $script .= "var $new_erreurs = $$new_erreurs ;" ;}
 			$script .= $js."</script>" ;
 			
@@ -1329,11 +1445,13 @@ class MultiForm
 		$modify_multiform = array() ;
 		$new_multiform = array() ;
 		
+		$request_form = array_merge($_POST, $_FILES);
+		
 		foreach($this->fields as $field_multiform => $conf_multiform)
 		{
 			if($conf_multiform[0] != 'div' && $conf_multiform[0] != '/div' && $conf_multiform[0] != 'p' && $conf_multiform[0] != 'h')
 			{
-				foreach($_POST as $key_multiform => $val_multiform)
+				foreach($request_form as $key_multiform => $val_multiform)
 				{
 					if(preg_match("/^new_idform_/", $key_multiform) || preg_match("/^idform_/", $key_multiform))
 					{
@@ -1374,7 +1492,7 @@ class MultiForm
 				}
 			}
 		}
-		
+	
 		if(count($this->listes_multiform) > 0)
 		{
 			foreach($keys_multiform as $key_multiform) 
@@ -1455,6 +1573,156 @@ class MultiForm
 			}
 		}
 		
+		if(count($this->files_multiform) > 0)
+		{
+			foreach($keys_multiform as $key_multiform)
+			{
+				$key_multiform = $this->crypt->encrypt($key_multiform) ;
+				
+				foreach($this->files_multiform as $field_form => $type_multiform)
+				{
+					$name_field = $field_form.'_'.$key_multiform ;
+					$id_objet = $this->crypt->decrypt($key_multiform) ;
+					$objet = $this->managers->getManagerOf($this->class)->DEF->getUnique($id_objet) ;
+						
+					if(isset($_FILES[$name_field]) && $_FILES[$name_field]['size'] != 0)
+					{
+						$dossier = $_SERVER["DOCUMENT_ROOT"].$this->fields[$field_form][4];
+				
+						$method = 'set'.ucfirst($field_form) ;
+							
+						$taille = $_FILES[$name_field]['size'];
+							
+						$extension = explode('.', $_FILES[$name_field]['name']);
+						$extension = strtolower($extension[count($extension)-1]);
+							
+						!empty($this->fields[$field_form][3]) ? $name = $this->fields[$field_form][3] : $name = basename($_FILES[$name_field]['name']);
+						$name = strtr($name,
+								'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ',
+								'AAAAAACEEEEIIIIOOOOOUUUUYaaaaaaceeeeiiiioooooouuuuyy');
+						$name = preg_replace('/([^.a-z0-9]+)/i', '', $name);
+							
+						$error = false ;
+							
+						$nb_erreur ++ ;
+						if($taille > $this->fields[$field_form][5])
+						{
+							$adds_erreur_multiform[$id_objet][] = $nb_erreur ;
+							$error = true ;
+						}
+							
+						$nb_erreur ++ ;
+						if(!in_array($extension, $this->fields[$field_form][6]))
+						{
+							$adds_erreur_multiform[$id_objet][] = $nb_erreur ;
+							$error = true ;
+						}
+							
+						$nb_erreur ++ ;
+							
+						if($error == false && $objet)
+						{
+							$nom = $objet->$field_form() ;
+								
+							$nom = explode(".", $nom);
+							$nom_unique = $nom[0].'.'.$extension ;
+								
+							${'tab_'.$field_form}[$id_objet] = $nom_unique ;
+								
+							if($error == true)
+							{
+								$adds_erreur_multiform[$id_objet][] = $nb_erreur ;
+							}
+							else
+							{
+								$objet->$method($nom_unique) ;
+								$this->managers->getManagerOf($this->class)->DEF->save($objet) ;
+							}
+						}
+						else
+						{
+							${'tab_'.$field_form}[$id_objet] = '' ;
+						}
+					}
+					else 
+					{
+						$nom = $objet->$field_form() ;
+						${'tab_'.$field_form}[$id_objet] = $nom ;
+					}
+				}
+			}
+			
+			foreach($new_keys_multiform as $id_objet)
+			{
+				foreach($this->files_multiform as $field_form => $type_multiform)
+				{
+					$name_field = 'new_'.$field_form.'_'.$id_objet ;
+				
+					if(isset($_FILES[$name_field]) && $_FILES[$name_field]['size'] != 0)
+					{
+						$dossier = $_SERVER["DOCUMENT_ROOT"].$this->fields[$field_form][4];
+				
+						$method = 'set'.ucfirst($field_form) ;
+							
+						$taille = $_FILES[$name_field]['size'];
+							
+						$extension = explode('.', $_FILES[$name_field]['name']);
+						$extension = strtolower($extension[count($extension)-1]);
+							
+						!empty($this->fields[$field_form][3]) ? $name = $this->fields[$field_form][3] : $name = basename($_FILES[$name_field]['name']);
+						$name = strtr($name,
+								'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ',
+								'AAAAAACEEEEIIIIOOOOOUUUUYaaaaaaceeeeiiiioooooouuuuyy');
+						$name = preg_replace('/([^.a-z0-9]+)/i', '', $name);
+							
+						$error = false ;
+							
+						$nb_erreur ++ ;
+						if($taille > $this->fields[$field_form][5])
+						{
+							$adds_erreur_multiform['new_'.$id_objet][] = $nb_erreur ;
+							$error = true ;
+						}
+							
+						$nb_erreur ++ ;
+						if(!in_array($extension, $this->fields[$field_form][6]))
+						{
+							$adds_erreur_multiform['new_'.$id_objet][] = $nb_erreur ;
+							$error = true ;
+						}
+							
+						$nb_erreur ++ ;
+							
+						if($error == false)
+						{
+							$nom_unique = $name.'.'.$extension ;
+							
+							$id_unique = uniqid('', true) ;
+							$nom_unique = $name.'_'.$id_unique.'.'.$extension ;
+							
+							while(file_exists($dossier.$nom_unique))
+							{
+								$id_unique = uniqid('', true) ;
+							
+								$nom_unique = $name.'_'.$id_unique.'.'.$extension ;
+							}
+				
+							${'new_tab'.$field_form}[$id_objet] = $nom_unique ;
+				
+							if($error == true)
+							{
+								$adds_erreur_multiform['new_'.$id_objet][] = $nb_erreur ;
+							}
+						}
+						else
+						{
+							${'new_tab'.$field_form}[$id_objet] = '' ;
+						}
+					}
+				}
+			}
+		}
+
 		$this->multi = $multi_multiform ;
 		
 		if(count($this->adds_fields) > 0)
@@ -1532,7 +1800,6 @@ class MultiForm
 									if((isset($adds_erreur_multiform[$key_multiform]) && !in_array($nb_erreur, $adds_erreur_multiform[$key_multiform])) || !isset($adds_erreur_multiform[$key_multiform]))
 									{
 										$conf[0] == 'textarea' ? $entity_associate = $conf[5] : $entity_associate = $conf[3] ;
-										
 										$RC = new \ReflectionClass($entity_associate);
 										$name = $RC->getName();
 										
@@ -1589,7 +1856,7 @@ class MultiForm
 				{
 					$conf = $this->fields[$add_multiform] ;
 					
-					if($conf_multiform[0] != 'div' && $conf_multiform[0] != '/div' && $conf_multiform[0] != 'p' && $conf_multiform[0] != 'h')
+					if($conf[0] != 'div' && $conf[0] != '/div' && $conf[0] != 'p' && $conf[0] != 'h')
 					{
 						if($conf[0] != 'hidden' && $conf[0] != 'submit' && $conf[0] != 'button' && $conf[0] != 'form' && $conf[0] != 'multiple' && $conf[0] != 'liste')
 						{
@@ -1703,7 +1970,7 @@ class MultiForm
 		}
 		
 		$stop_multiform = false ;
-		
+
 		foreach($old_entity_multiform as $entity_id_multiform)
 		{
 			if(in_array($entity_id_multiform, $keys_multiform))
@@ -1740,9 +2007,8 @@ class MultiForm
 					}
 					
 					$array_entity_multiform['id'] = $entity_id_multiform ;
-					
 					$entity_multiform = new $class_multiform($array_entity_multiform) ;
-						
+
 					if ($entity_multiform->isValid() && !isset($adds_erreur_multiform[$entity_id_multiform]))
 					{
 						if($validate === false) 
@@ -1754,6 +2020,20 @@ class MultiForm
 							else
 							{
 								$this->managers->getManagerOf($this->entity)->DEF->save($entity_multiform, $this->app->config()->getGlobal('encrypt_key')) ;
+							}
+							
+							foreach($this->files_multiform as $field_form => $type_multiform)
+							{
+								$encrypt_id = $this->crypt->encrypt($entity_id_multiform);
+								
+								$name_field = $field_form.'_'.$encrypt_id ;
+
+								if(isset($_FILES[$name_field]))
+								{
+									$dossier = $_SERVER["DOCUMENT_ROOT"].$this->fields[$field_form][4];
+									$name_file = $entity_multiform[$field_form] ;
+									move_uploaded_file($_FILES[$name_field]['tmp_name'], $dossier.$name_file) ;
+								}
 							}
 						}
 						else
@@ -1794,18 +2074,32 @@ class MultiForm
 						${$erreurs_multiform}[$entity_id_multiform] = $liste_erreur_multiform[$entity_id_multiform] ;
 					}
 				}
-				
-				
 			}
 			elseif(ctype_digit($entity_id_multiform) && $validate == false)
 			{
+				if(count($this->files_multiform) > 0)
+				{
+					$entity_multiform = $this->managers->getManagerOf($this->entity)->DEF->getUnique($entity_id_multiform) ;
+					
+					foreach($this->files_multiform as $field_form => $type_multiform)
+					{
+						$dossier = $_SERVER["DOCUMENT_ROOT"].$this->fields[$field_form][4];
+						$name_file = $entity_multiform[$field_form] ;
+						
+						if(file_exists($dossier.$name_file))
+						{
+							unlink($dossier.$name_file) ;
+						}
+					}
+				}
+				
 				method_exists($this->managers->getManagerOf($this->entity), 'delete') ? $this->managers->getManagerOf($this->entity)->delete($entity_id_multiform) : $this->managers->getManagerOf($this->entity)->DEF->delete($entity_id_multiform) ;
 			}
 		}
 		
 		/*echo "tab " ;
 		var_dump($entity_multiform->erreurs()) ;*/
-		
+
 		if(count($new_keys_multiform) > 0)
 		{
 			foreach($new_keys_multiform as $key_multiform)
@@ -1848,7 +2142,6 @@ class MultiForm
 				
 				$entity_multiform = new $class_multiform($array_new_entity_multiform) ;
 				
-				
 				if($entity_multiform->isValid() && count($adds_erreur_multiform) == 0)
 				{
 					if($validate === false) 
@@ -1868,6 +2161,14 @@ class MultiForm
 									method_exists($this->managers->getManagerOf($this->entity), 'associate') ? $this->managers->getManagerOf($this->entity)->associate($id_entity_multiform, $id_associate_multiform, $associate_name_multiform) : $this->managers->getManagerOf($this->entity)->DEF->associate($id_entity_multiform, $id_associate_multiform, $associate_name_multiform) ;
 								}
 							}
+						}
+						
+						foreach($this->files_multiform as $field_form => $type_multiform)
+						{
+							$name_field = 'new_'.$field_form.'_'.$key_multiform ;
+							$dossier = $_SERVER["DOCUMENT_ROOT"].$this->fields[$field_form][4];
+							$name_file = $entity_multiform[$field_form] ;
+							move_uploaded_file($_FILES[$name_field]['tmp_name'], $dossier.$name_file) ;
 						}
 						
 						if(isset($this->adds[$key_multiform]))
@@ -1902,7 +2203,7 @@ class MultiForm
 					$new_multiform[] = $entity_multiform ;
 					$erreur_multiform ++ ;
 				}
-				
+
 				if(isset($liste_erreur_multiform[$key_multiform]))
 				{
 					if(isset(${$new_erreur_multiform}[$id_entity_multiform]))
@@ -1945,8 +2246,6 @@ class MultiForm
 		
 		$this->erreurs = $$erreurs_multiform ;
 		$this->new_erreurs = $$new_erreur_multiform ;
-		
-		//var_dump($this->erreurs) ;
 		
 		if($erreur_multiform === 0)
 		{
