@@ -5,7 +5,7 @@
 	<define var="API" value="PDO" /> <!-- PDO / MySQLi -->
 	<define var="site" value="http://tmsimulateur" />
 	<define var="prefix_table" value="" />
-	<define var="dbname" value="TM_simulateur" />
+	<define var="dbname" value="tm_simulateur" />
 	<define var="dblogin" value="root" />
 	<define var="dbpassword" value="root" />
 	<define var="host" value="localhost" />

@@ -222,7 +222,7 @@ class Pdo
 				elseif($type == 'datetime' && $entity[$argument] != '0000-00-00')
 				{
 					$method = 'set'.ucfirst($argument) ;
-					$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i')) ;
+					$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i:s')) ;
 				}
 			}
 		}
@@ -432,12 +432,12 @@ class Pdo
 			{
 				foreach ($this->types as $argument => $type)
 				{
-					if($type == 'date' && $entity[$argument] != '0000-00-00' && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4}$)/',$entity[$argument]))
+					if($type == 'date' && $entity[$argument] != '0000-00-00' && !empty($entity[$argument]) && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4}$)/',$entity[$argument]))
 					{
 						$method = 'set'.ucfirst($argument) ;
 						$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y')) ;
 					}
-					elseif($type == 'datetime' && $entity[$argument] != '0000-00-00' && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$)/',$entity[$argument]))
+					elseif($type == 'datetime' && $entity[$argument] != '0000-00-00' && !empty($entity[$argument]) && !preg_match('/^(\d{1,2}\/\d{1,2}\/\d{4} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$)/',$entity[$argument]))
 					{
 						$method = 'set'.ucfirst($argument) ;
 						$entity->$method(date_format(date_create($entity[$argument]),'d/m/Y H:i:s')) ;
@@ -458,33 +458,44 @@ class Pdo
 			$bind = array () ;
 			
 			$attributs = $entity->getVars();
-			
+
 			foreach ($attributs as $nom => $valeur) 
 			{
 				if($nom  != 'erreurs' && $nom  != 'id' && $nom  != 'validator' && isset($this->types[$nom]))
 				{
-					if(isset($valeur))
+					if($this->types[$nom] == 'date')
 					{
-						if($this->types[$nom] == 'date')
+						if(!$valeur instanceof \DateTime)
 						{
 							date_parse_from_format("Y-m-d", $valeur)['error_count'] != 0 ? $valeur = $this->manager->date_format($valeur) : $valeur = $valeur ;
 						}
-						elseif($this->types[$nom] == 'datetime')
+						else
+						{
+							$valeur = $valeur->format('Y-m-d');
+						}
+					}
+					elseif($this->types[$nom] == 'datetime')
+					{							
+						if(!$valeur instanceof \DateTime)
 						{
 							date_parse_from_format("Y-m-d H:i:s", $valeur)['error_count'] != 0 ? $valeur = $this->manager->datetime_format($valeur) : $valeur = $valeur ;
 						}
-						
-						$first == false ? $sql .= ', ' : $first = false ;
-						$sql .= $nom.' = :'.$nom ;
-						$bind[':'.$nom] = $valeur ;
+						else
+						{
+							$valeur = $valeur->format('Y-m-d H:i:s');
+						}
 					}
+					
+					$first == false ? $sql .= ', ' : $first = false ;
+					$sql .= $nom.' = :'.$nom ;
+					$bind[':'.$nom] = $valeur ;
 				}
 			}
 			
 			$sql .= ' WHERE id = :id' ;
 			
 			$requete = $this->manager->dao->prepare($sql) ;
-			
+
 			foreach ($bind as $nom => $valeur) 
 			{
 				$valeur === false ? $requete->bindValue($nom, null, \PDO::PARAM_INT) : $requete->bindValue($nom, $valeur);

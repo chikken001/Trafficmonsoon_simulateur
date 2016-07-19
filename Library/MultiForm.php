@@ -72,6 +72,8 @@ class MultiForm
 		
 		if(is_array($entities))
 		{
+			$tab_entities = array() ;
+			
 			if(count($entities) > 0)
 			{
 				foreach($entities as $entity)
@@ -80,10 +82,14 @@ class MultiForm
 					{
 						throw new \InvalidArgumentException('Le tableau d\'entite contient une instance invalide ou différente de : '.$this->entity);
 					}
+					else 
+					{
+						$tab_entities[$entity->id()] = $entity ;
+					}
 				}
 			}
 			
-			$this->entities = $entities ;
+			$this->entities = $tab_entities ;
 		}
 		elseif(!empty($entities))
 		{
@@ -160,6 +166,11 @@ class MultiForm
 									{
 										throw new \InvalidArgumentException('Le message d\'erreur specifie a "'.$field.'" pour l\'erreur '.$error.' est invalide : '.$msg);
 									}
+								}
+								
+								if(isset($conf[4]))
+								{
+									$arguments = $conf[4] ;
 								}
 							}
 							
@@ -242,7 +253,7 @@ class MultiForm
 							{
 								foreach($arguments as $index => $value)
 								{
-									if(!in_array($index, $attributes) || !is_string($value))
+									if(!in_array($index, $attributes) || (!is_string($value) && !is_numeric($value)))
 									{
 										throw new \InvalidArgumentException('Le tableau d\'arguments specifie a '.$field.' contient un ou plusieurs elements invalides');
 									}
@@ -459,7 +470,7 @@ class MultiForm
 				}
 				elseif($conf[0] == 'p')
 				{
-					if(!isset($conf[1]) || !is_string($conf[1]) || empty($conf[1]))
+					if(!isset($conf[1]) || !is_string($conf[1]))
 					{
 						throw new \InvalidArgumentException('le contenu de la balise p est invalide');
 					}
@@ -553,6 +564,8 @@ class MultiForm
 		
 		foreach($this->fields as $field => $conf)
 		{
+			$arguments = array() ;
+			
 			if($field != 'valide_form')
 			{
 				$field_champ = '' ;
@@ -1483,10 +1496,13 @@ class MultiForm
 						{
 							$supr_multiform = array("new_".$field_multiform."_" => "");
 							$replace_multiform = strtr($key_multiform, $supr_multiform);
-							$var_multiform = 'new_tab'.$field_multiform ;
-							${$var_multiform}[$replace_multiform] = $val_multiform ;
-							$new_champs_multiform[$var_multiform] = $field_multiform ;
-							if(!in_array($replace_multiform, $new_keys_multiform)) $new_keys_multiform[] = $replace_multiform;
+							if(is_numeric($replace_multiform))
+							{
+								$var_multiform = 'new_tab'.$field_multiform ;
+								${$var_multiform}[$replace_multiform] = $val_multiform ;
+								$new_champs_multiform[$var_multiform] = $field_multiform ;
+								if(!in_array($replace_multiform, $new_keys_multiform)) $new_keys_multiform[] = $replace_multiform;
+							}
 						}
 					}
 				}
@@ -2006,9 +2022,14 @@ class MultiForm
 						}
 					}
 					
-					$array_entity_multiform['id'] = $entity_id_multiform ;
-					$entity_multiform = new $class_multiform($array_entity_multiform) ;
-
+					$entity_multiform = $this->entities[$entity_id_multiform] ;
+					
+					foreach($array_entity_multiform as $champ => $value)
+					{
+						$method = 'set'.ucfirst($champ);
+						$entity_multiform->$method($value) ;
+					}
+						
 					if ($entity_multiform->isValid() && !isset($adds_erreur_multiform[$entity_id_multiform]))
 					{
 						if($validate === false) 

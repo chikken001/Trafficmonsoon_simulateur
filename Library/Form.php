@@ -1012,15 +1012,9 @@ class Form
 				}
 				elseif($conf[0] == 'hidden' && $conf[1] === true)
 				{
-					if(isset($entity[$field]))
-					{
-						$hidden = '<input type="hidden" name="'.$prefix_field.$field.'" value="'.$entity[$field].'"/>' ;	
-						$formulaire .= $hidden ;
-					}
-					else
-					{
-						throw new \InvalidArgumentException('Le champ hidden '.$field.' n\'est pas un attribut ou n\'est pas attribue a l\'objet : '.$this->entity);
-					}
+					$value = $this->objet[$field] ;
+					$hidden = '<input type="hidden" name="'.$prefix_field.$field.'" value="'.$value.'"/>' ;	
+					$formulaire .= $hidden ;
 				}
                 elseif($conf[0] == 'submit')
 				{
@@ -1168,23 +1162,6 @@ class Form
             }
             
             $array_entity = array () ;
-            
-            if(count($values) > 0)
-            {
-                foreach($values as $value => $val)
-                {
-                    if(!in_array($value, $this->vars))
-                    {
-                        throw new \InvalidArgumentException('La valeur de l\'attribut '.$value.' dans $values n\'est pas valide');	
-                    }
-                    else
-                    {
-                        //$array_entity[$value] = $val ;
-                        $method = 'set'.ucfirst($value) ;
-                        $this->objet->$method($val) ;
-                    }
-                }
-            }
             
             foreach($this->vars as $attribut)
             {
@@ -1496,6 +1473,23 @@ class Form
                         $multiform = $this->multiform->processMultiform(true, $values, false);
                     }
                 }
+            }
+            
+            if(count($values) > 0)
+            {
+            	foreach($values as $value => $val)
+            	{
+            		if(!in_array($value, $this->vars))
+            		{
+            			throw new \InvalidArgumentException('La valeur de l\'attribut '.$value.' dans $values n\'est pas valide');
+            		}
+            		else
+            		{
+            			//$array_entity[$value] = $val ;
+            			$method = 'set'.ucfirst($value) ;
+            			$this->objet->$method($val) ;
+            		}
+            	}
             }
             
             $erreurs = array_merge($entity->erreurs(), $add_erreurs) ;

@@ -69,7 +69,7 @@ class ConnexionController extends \Library\BackController
 				{
 					$salt = $user->salt();
 					$pass = $crypt->pass($password, $salt, $this->encrypt_key) ;
-					
+
 					if($pass == $user->mdp())
 					{
 						$this->app->user()->setAuthenticated(true);

@@ -50,11 +50,11 @@ class Session
         
         $query = mysqli_query($this->connect,$sql);
         $return = mysqli_fetch_array($query);
+        
         if($return['total'] == 0)//si la session n'existe pas encore
         {
-            $sql = "INSERT INTO ".PREFIX_TABLE."session
-                VALUES('$sid','$data','$expire','$ip')";//alors on la crée
-            
+            $sql = "INSERT INTO ".PREFIX_TABLE."session (sess_id,sess_datas,sess_ip,sess_expire)
+                VALUES('$sid','$data','$ip','$expire')";//alors on la crée
         }
         else//sinon
         {
