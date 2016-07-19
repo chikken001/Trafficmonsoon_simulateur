@@ -7,7 +7,7 @@
 		<input type="submit" name="valider" value="Valider">
 	</form>
 	<?php 
-		echo "Solde sur le compte au $date_solde :" ;
+		echo "<div class=\"date_solde\"><p>Solde sur le compte au $date_solde :<p></div>" ;
 		echo $solde_form ;
 		echo '<p id="solde"></p>' ;
 		echo $pack_form ;
@@ -41,6 +41,18 @@
 		min = end.getMinutes() ;
 		add = (60 - min) * 60000 ;
 		end.setTime(time + add) ;
+
+		start_solde = new Date(dateFRtoEN($("form[name='User']").find("input[name='User_updated_at']").val())) ;
+
+		time = start_solde.getTime() ;
+		min = start_solde.getMinutes() ;
+		add = (60 - min) * 60000 ;
+		start_solde.setTime(time + add) ;
+
+		if(60 - min > 45)
+		{
+			$(".date_solde").append('<p style="color:red;">(Il est conseillé de mettre à jour le montant après les 15 premières minutes d\'une heure)</p>') ;
+		}
 		
 		$(".Pack").each(function(index) 
 		{
@@ -67,13 +79,12 @@
 			montant = parseFloat($(this).find("input[name='montant_"+id_form+"']").val()) ;
 			montant = montant + add_montant ;
 			if(montant > 55) montant = 55 ;
-			console.log(montant);
+			
 			total = total + montant ;
 			reste = reste + (55-montant) ;
 			
 			$(this).append('<p>'+montant.toFixed(2)+'</p>') ;
 
-			start_solde = new Date(dateFRtoEN($("form[name='User']").find("input[name='User_updated_at']").val())) ;
 			diff = new Date(start_solde - start) ;
 			
 			if(diff > 0)

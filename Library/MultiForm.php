@@ -659,16 +659,14 @@ class MultiForm
 					
 					if($conf[0] != 'submit' && $conf[0] != 'button' && $conf[0] != 'form' && $conf[0] != 'multiple' && $conf[0] != 'liste' && $conf[0] != 'radio')
 					{
-						if($conf[0] == 'textarea' && isset($conf[6]))
+						if($conf[0] == 'textarea')
 						{
 							$script .= 'var '.$field.'= \'<textarea name="new_'.$field.'_\'+count_form_'.$this->id.'+\'"' ;
-							$arguments = $conf[6] ;
 							$end = '</textarea>\' ;' ;
 							
-							if(isset($arguments) && is_array($arguments))
+							if(isset($conf[6]) && is_array($conf[6]))
 							{
-								//die(var_dump($arguments));
-								foreach($arguments as $index => $value)
+								foreach($conf[6] as $index => $value)
 								{
 									$value = str_replace("'", "\'", $value) ;
 									$script .= ' '.$index.' ="'.$value.'"';
@@ -678,15 +676,14 @@ class MultiForm
 							$script .= '>' ;
 							
 						}
-						elseif($conf[0] != 'textarea' && isset($conf[4]))
+						elseif($conf[0] != 'textarea')
 						{
 							$script .= 'var '.$field.'= \'<input type="'.$conf[0].'" name="new_'.$field.'_\'+count_form_'.$this->id.'+\'" value=""' ;
-							$arguments = $conf[4] ;
 							$end = '/>\' ;' ;
 							
-							if(isset($arguments) && is_array($arguments))
+							if(isset($conf[4]) && is_array($conf[4]))
 							{
-								foreach($arguments as $index => $value)
+								foreach($conf[4] as $index => $value)
 								{
 									$script .= ' '.$index.' ="'.$value.'"' ;
 								}
