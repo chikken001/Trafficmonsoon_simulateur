@@ -29,8 +29,6 @@
 		min = 0,
 		add = 0,
 		// 0.0416666666666667
-		// 0.0438582
-		// 0,04401293
 		gain_hourly = 0.0416666666666667,
 		solde_add_montant = 0 ,
 		reste = 0 ,
@@ -58,7 +56,6 @@
 		{
 			id_form = $(this).find("input[type='hidden']").val() ;
 			start = new Date(dateFRtoEN($(this).find("input[name='date_"+id_form+"']").val())) ;
-			
 			time = start.getTime() ;
 			min = start.getMinutes() ;
 			add = (60 - min) * 60000 ;
